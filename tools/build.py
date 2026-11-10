@@ -33,7 +33,7 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SRC = os.path.join(ROOT, "src")
 NAME = "ultima-memento"
 APP_CONFIG_ID = "d88f2737-58de-4e24-a6b4-2e176e3c7e6b"
-CONFIG_VERSION = 1
+CONFIG_VERSION = 2
 MIN_AMP_VERSION = "2.7.2.0"
 UPSTREAM_REPO = "Jascen/ultima-memento"
 
@@ -499,9 +499,18 @@ def helper_stages():
               '/C ""' + CSC + '" /nologo /optimize /out:"' + R + 'amp\\MementoAmp.exe" "' + R + 'amp\\MementoAmp.cs""',
               "cmd.exe"),
         stage("Compile Helper", "Linux", "Executable",
-              '-c "mcs -optimize+ -out:\\"' + R + 'amp/MementoAmp.exe\\" \\"' + R + 'amp/MementoAmp.cs\\""',
+              '-c "' + MONO_CHECK + 'mcs -optimize+ -out:\\"' + R + 'amp/MementoAmp.exe\\" \\"' + R + 'amp/MementoAmp.cs\\""',
               "/bin/bash"),
     ]
+
+
+# Linux: stop with instructions instead of a bare "mcs: command not found" when Mono is missing.
+# (Inside a double-quoted bash -c argument, so no double quotes or apostrophes in the message.)
+MONO_CHECK = ("command -v mcs >/dev/null 2>&1 && command -v mono >/dev/null 2>&1 || { "
+              "echo 'ERROR: Mono is not installed where this instance runs (the mcs compiler was not found).'; "
+              "echo 'Ultima Memento needs Mono on Linux. Either recreate this instance with the Docker container "
+              "option turned on (its image includes Mono), or install Mono on the host: sudo apt install mono-complete'; "
+              "exit 1; }; ")
 
 
 def run_helper(name, args_win, args_linux, **extra):
@@ -605,8 +614,8 @@ def kvp():
         ("Meta.SpecificDockerImage", "cubecoders/ampbase:mono-latest"),
         ("Meta.DockerRequired", "False"),
         ("Meta.DockerBaseReadOnly", "False"),
-        ("Meta.ContainerPolicy", "Supported"),
-        ("Meta.ContainerPolicyReason", "On Linux the server runs on Mono. The container image already includes Mono; without a container, install mono-complete on the host."),
+        ("Meta.ContainerPolicy", "SupportedOnWindows, RecommendedOnLinux"),
+        ("Meta.ContainerPolicyReason", "Ultima Memento needs Mono, including its C# compiler, on Linux. The container image already has it, so nothing has to be installed on the host. Without a container, install mono-complete on the host first."),
         ("Meta.ExtraSetupStepsURI", "https://github.com/Jascen/ultima-memento#readme"),
         ("Meta.Prerequisites", "[]"),
         ("Meta.ExtraContainerPackages", "[]"),

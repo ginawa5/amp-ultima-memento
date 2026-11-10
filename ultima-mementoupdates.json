@@ -28,7 +28,7 @@
         "UpdateSourcePlatform": "Linux",
         "UpdateSource": "Executable",
         "UpdateSourceData": "/bin/bash",
-        "UpdateSourceArgs": "-c \"mcs -optimize+ -out:\\\"{{$FullRootDir}}amp/MementoAmp.exe\\\" \\\"{{$FullRootDir}}amp/MementoAmp.cs\\\"\"",
+        "UpdateSourceArgs": "-c \"command -v mcs >/dev/null 2>&1 && command -v mono >/dev/null 2>&1 || { echo 'ERROR: Mono is not installed where this instance runs (the mcs compiler was not found).'; echo 'Ultima Memento needs Mono on Linux. Either recreate this instance with the Docker container option turned on (its image includes Mono), or install Mono on the host: sudo apt install mono-complete'; exit 1; }; mcs -optimize+ -out:\\\"{{$FullRootDir}}amp/MementoAmp.exe\\\" \\\"{{$FullRootDir}}amp/MementoAmp.cs\\\"\"",
         "SkipOnFailure": false
     },
     {

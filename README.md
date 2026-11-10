@@ -156,10 +156,16 @@ it also understands `save` and `shutdown`, but its authors warn it may crash the
 
 ## Linux
 
-- In a container (the default when AMP uses Docker) the image `cubecoders/ampbase:mono-latest`
-  already includes Mono with the compiler.
-- Without a container, install Mono on the host first, for example `sudo apt install mono-complete`
-  (the [Mono project packages](https://www.mono-project.com/download/stable/) if your distro has none).
+The server needs Mono, including its C# compiler (`mcs`), because the update compiles the server.
+
+- **Recommended: run the instance in a container.** Turn on the Docker container option when you
+  create the instance (AMP suggests it for this template). The image
+  `cubecoders/ampbase:mono-latest` already includes Mono, so nothing has to be installed on the
+  host. AMP needs Docker on the host for this.
+- Without a container, install Mono on the host before clicking **Update**, for example
+  `sudo apt install mono-complete` (the [Mono project packages](https://www.mono-project.com/download/stable/)
+  if your distro has none). Without Mono the update stops with
+  `ERROR: Mono is not installed where this instance runs`.
 - The server loads zlib as `libz`, which plain Debian/Ubuntu only provides with the `-dev` package.
   The update writes `WorldLinux.exe.config` with a Mono mapping to `libz.so.1`, so nothing extra is
   needed.
@@ -202,6 +208,9 @@ tag or branch, and `--settings path/to/Settings.cs` reads a local file. The scri
   repository root and the repository is public, then click **Fetch latest** and reload the page.
   The AMP log shows whether fetching the repository failed.
 - **"The server is not installed yet"**: click **Update** first.
+- **`mcs: command not found` or "Mono is not installed" on Linux**: the instance runs without a
+  container on a host without Mono. Recreate it with the container option on, or install
+  `mono-complete` on the host (see [Linux](#linux)).
 - **The start fails with "Invalid value(s) in the AMP settings"**: the message names the setting;
   fix it on the Configuration page.
 - **Script compile errors after an update**: if you set **Install Source** to source code, that
