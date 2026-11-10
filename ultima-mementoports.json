@@ -1,0 +1,9 @@
+[
+    {
+        "Protocol": "TCP",
+        "Port": 2593,
+        "Ref": "GamePort",
+        "Name": "Game Port",
+        "Description": "Port that Ultima Online clients connect to (S_Port in Settings.cs)"
+    }
+]
