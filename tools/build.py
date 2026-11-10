@@ -10,10 +10,12 @@ Reads the upstream World/Info/Scripts/Settings.cs and the C# sources in ../src, 
     ultima-mementometaconfig.json (empty: AMP does not edit any config file directly)
     ultima-mementoupdates.json    "Update": download, deploy, compile
     ultima-mementostart.json      before every start: write Settings.override.cs, install bridge
+    manifest.json                 tells AMP this repository is a template repository
 
 Usage:
-    python tools/build.py                       # fetch Settings.cs from GitHub (main)
-    python tools/build.py --ref 2.5.0           # fetch it from a tag / branch / commit
+    python tools/build.py --repo you/amp-ultima-memento   # first run: the GitHub repo you push to
+    python tools/build.py                       # later runs keep the repo from manifest.json
+    python tools/build.py --ref 2.5.0           # fetch Settings.cs from a tag / branch / commit
     python tools/build.py --settings path/to/Settings.cs
 
 Re-run it whenever upstream adds or removes settings, then commit the regenerated files.
@@ -34,6 +36,11 @@ APP_CONFIG_ID = "d88f2737-58de-4e24-a6b4-2e176e3c7e6b"
 CONFIG_VERSION = 1
 MIN_AMP_VERSION = "2.7.2.0"
 UPSTREAM_REPO = "Jascen/ultima-memento"
+
+# manifest.json: AMP only loads a configuration repository that has one, and its id and prefix
+# must differ from every other repository AMP knows (the official one uses an empty prefix).
+REPO_ID = "f6fb8d84-58d0-4dc4-a277-d1fce92656d2"
+REPO_PREFIX = "Memento"
 
 R = "{{$FullRootDir}}"  # instance/ultima-memento/ (AMP includes the trailing separator)
 CSC = r"%WINDIR%\Microsoft.NET\Framework64\v4.0.30319\csc.exe"
@@ -760,11 +767,42 @@ def load_settings(args):
         return resp.read().decode("utf-8-sig"), url
 
 
+def template_repo(arg):
+    """owner/name of the GitHub repository this template is pushed to (--repo, else manifest.json)."""
+    repo = arg
+    if not repo:
+        try:
+            with open(os.path.join(ROOT, "manifest.json"), encoding="utf-8-sig") as fh:
+                url = json.load(fh).get("url", "")
+            repo = re.sub(r"^https://github\.com/", "", url).strip("/")
+        except (OSError, ValueError):
+            repo = ""
+    repo = re.sub(r"^(https?://)?github\.com/", "", (repo or "").strip()).strip("/")
+    repo = re.sub(r"\.git$", "", repo)
+    if not re.match(r"^[A-Za-z0-9-]+/[A-Za-z0-9._-]+$", repo):
+        raise SystemExit("Pass --repo owner/name: the GitHub repository you push this template to.")
+    return repo
+
+
+def manifest(repo):
+    return {
+        "id": REPO_ID,
+        "authors": [repo.split("/")[0]],
+        "origin": "https://github.com/%s.git" % repo,
+        "url": "https://github.com/%s" % repo,
+        "imagefile": "",
+        "prefix": REPO_PREFIX,
+        "repotype": "AppTemplates",
+    }
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--settings", help="path to a local Settings.cs")
     ap.add_argument("--ref", default="main", help="branch/tag/commit to fetch Settings.cs from (default: main)")
+    ap.add_argument("--repo", help="owner/name of the GitHub repo this template is pushed to (kept in manifest.json)")
     args = ap.parse_args()
+    repo = template_repo(args.repo)
 
     text, origin = load_settings(args)
     fields = parse_settings(text)
@@ -800,6 +838,7 @@ def main():
     write(NAME + "metaconfig.json", "[]\n")
     write(NAME + "updates.json", dump(updates))
     write(NAME + "start.json", dump(start))
+    write("manifest.json", json.dumps(manifest(repo), indent="\t") + "\n")
     print("%d game settings from %s (+%d AMP settings, %d managed by AMP)" % (
         len(fields) - len(MANAGED), origin, len(amp_settings()), len(MANAGED)))
 

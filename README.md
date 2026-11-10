@@ -15,12 +15,17 @@ single-player / small-group Ultima Online shard based on Ruins & Riches (RunUO).
 
 AMP loads templates from GitHub repositories.
 
-1. Push the contents of this folder to a GitHub repository, for example `yourname/amp-ultima-memento`.
-   The `*.kvp` and `*.json` files must be in the repository root.
+1. Push the contents of this folder to a **public** GitHub repository, for example
+   `yourname/amp-ultima-memento`. `manifest.json`, the `*.kvp` and the `*.json` files must be in
+   the repository root, not in a subfolder.
+   `manifest.json` is what makes AMP accept the repository. It names the repository, so if you
+   push to a different one, regenerate it first: `python tools/build.py --repo owner/name`.
 2. In AMP open the main (ADS) instance, then **Configuration → Instance Deployment**.
-3. Add `yourname/amp-ultima-memento:main` to **Configuration Repositories**
-   (keep `CubeCoders/AMPTemplates:main` in the list), then click **Fetch latest**.
-4. **Create Instance** → choose **Ultima Memento** from the application list.
+3. Add `yourname/amp-ultima-memento:main` to **Configuration Repositories**: just `owner/repo:branch`,
+   not a URL, and use the branch you pushed to. Keep `CubeCoders/AMPTemplates:main` in the list.
+4. Click **Fetch latest**, then reload the AMP page in your browser.
+5. **Create Instance** → choose **Ultima Memento** from the application list. Templates from other
+   repositories show with the repository's prefix, here `Memento`.
 
 ## 2. First start
 
@@ -180,6 +185,7 @@ The JSON files are generated. When upstream adds, removes or renames settings, r
 python tools/build.py
 ```
 
+It keeps the repository name from `manifest.json`; pass `--repo owner/name` to change it.
 Then commit and push, and click **Fetch latest** in AMP. `--ref 2.5.0` reads `Settings.cs` from a
 tag or branch, and `--settings path/to/Settings.cs` reads a local file. The script needs only Python 3.
 
@@ -192,6 +198,9 @@ tag or branch, and `--settings path/to/Settings.cs` reads a local file. The scri
 
 ## Troubleshooting
 
+- **Ultima Memento is not in the application list**: check that `manifest.json` is in the
+  repository root and the repository is public, then click **Fetch latest** and reload the page.
+  The AMP log shows whether fetching the repository failed.
 - **"The server is not installed yet"**: click **Update** first.
 - **The start fails with "Invalid value(s) in the AMP settings"**: the message names the setting;
   fix it on the Configuration page.
